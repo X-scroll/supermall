@@ -1,5 +1,5 @@
 <template>
-  <Tabbar>
+  <Tabbar class="tab">
      <TabbarItem path='/home' activedColor='deeppink'>
         <img src="~assets/img/tabbar/home.svg" alt="" slot="item-icon">
         <img src="~assets/img/tabbar/home_active.svg" alt="" slot="item-icon-active">
@@ -40,5 +40,8 @@ export default {
  }
 </script>
 
-<style lang="" scoped>
+<style scoped>
+.tab{
+  /* width: 375px; */
+}
 </style>

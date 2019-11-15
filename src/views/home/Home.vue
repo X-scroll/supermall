@@ -3,12 +3,15 @@
     <nav-bar class="home-nav">
       <div slot="center">购物街</div>
     </nav-bar>
-    <home-swiper :banners="banners"></home-swiper>
-    <home-recommend-view :recommends="recommends"></home-recommend-view>
-    <feature-view></feature-view>
+    <scroll class="content" ref="scroll" :probeType='3'>
+      <home-swiper :banners="banners"></home-swiper>
+      <home-recommend-view :recommends="recommends"></home-recommend-view>
+      <feature-view></feature-view>
 
-    <tab-control :titles="['流行','新款','精选']" class="tabcontrol"></tab-control>
-    <goods-list :goods='goods["pop"].list'></goods-list>
+      <tab-control :titles="['流行','新款','精选']" class="tabcontrol" @itemclick="tabclick"></tab-control>
+      <goods-list :goods="showGoods"></goods-list>
+    </scroll>
+    <BackTop @click.native="backtop"></BackTop>
     <ul>
       <li>555</li>
       <li>555</li>
@@ -53,6 +56,8 @@
 import NavBar from "components/common/navbar/NavBar";
 import TabControl from "components/content/tabControl/TabControl";
 import GoodsList from "components/content/goods/GoodsList";
+import Scroll from "components/common/scroll/Scroll";
+import BackTop from "components/content/backTop/BackTop";
 
 import HomeSwiper from "./childrenComponents/HomeSwiper";
 import HomeRecommendView from "./childrenComponents/HomeRecommendView";
@@ -81,7 +86,8 @@ export default {
           page: 0,
           list: []
         }
-      }
+      },
+      currentType: "pop"
     };
   },
   components: {
@@ -89,31 +95,57 @@ export default {
     TabControl,
     GoodsList,
     HomeSwiper,
+    Scroll,
+    BackTop,
     HomeRecommendView,
     FeatureView
+  },
+  computed: {
+    showGoods() {
+      return this.goods[this.currentType].list;
+    }
   },
   created() {
     // 1.请求多个数据
     this.getHomeMultidata();
-    this.getHomeData('pop',1)
-    this.getHomeData('new',1)
-    this.getHomeData('sell',1)
+    this.getHomeData("pop", 1);
+    this.getHomeData("new", 1);
+    this.getHomeData("sell", 1);
   },
   methods: {
+    // 事件监听相关
+    tabclick(index) {
+      switch (index) {
+        case 0:
+          this.currentType = "pop";
+          break;
+        case 1:
+          this.currentType = "new";
+          break;
+        case 2:
+          this.currentType = "sell";
+          break;
+        default:
+          break;
+      }
+    },
+    backtop() {
+      this.$refs.scroll.scrollTo(0, 0);
+    },
+    // 网络请求线管
     getHomeMultidata() {
       getHomeMultidata().then(res => {
         this.banners = res.data.banner.list;
         this.recommends = res.data.recommend.list;
       });
     },
-    getHomeData(type){
-      const page = this.goods[type].page+1
+    getHomeData(type) {
+      const page = this.goods[type].page + 1;
       getHomeData(type, page).then(res => {
-        console.log(res);
-        
-        this.goods[type].list.push(...res.data.list)
-        this.goods[type].page+=1
-    });
+
+        this.goods[type].list.push(...res.data.list);
+        this.goods[type].page += 1;
+      });
     }
   }
 };
@@ -121,6 +153,8 @@ export default {
 
 <style scoped>
 #home {
+  width: 100vw;
+  height: 100vh;
   padding-top: 44px;
 }
 .home-nav {
@@ -136,5 +170,10 @@ export default {
   position: sticky;
   top: 44px;
   background-color: #ffffff;
+  z-index: 999;
+}
+.content {
+  height: calc(100vh - 95px);
+  overflow: hidden;
 }
 </style>
