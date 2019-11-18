@@ -3,52 +3,21 @@
     <nav-bar class="home-nav">
       <div slot="center">购物街</div>
     </nav-bar>
-    <scroll class="content" ref="scroll" :probeType='3'>
-      <home-swiper :banners="banners"></home-swiper>
+     <tab-control :titles="['流行','新款','精选']"  @itemclick="tabclick" ref='tabControl1' 
+     class="tabcontrol" v-show="istabfixed"></tab-control>
+    <scroll class="content" ref="scroll" :probe-type="3" 
+    :pull-up-load='true'
+    @scroll="contentscroll"
+    @pullingUp='loadMore'>
+      <home-swiper :banners="banners" @swiperload='swiperload'></home-swiper>
       <home-recommend-view :recommends="recommends"></home-recommend-view>
       <feature-view></feature-view>
 
-      <tab-control :titles="['流行','新款','精选']" class="tabcontrol" @itemclick="tabclick"></tab-control>
+      <tab-control :titles="['流行','新款','精选']"  @itemclick="tabclick" ref='tabControl2'></tab-control>
       <goods-list :goods="showGoods"></goods-list>
     </scroll>
-    <BackTop @click.native="backtop"></BackTop>
-    <ul>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-      <li>555</li>
-    </ul>
+    <BackTop @click.native="backtop" v-show="needTop"></BackTop>
+   
   </div>
 </template>
 
@@ -64,7 +33,7 @@ import HomeRecommendView from "./childrenComponents/HomeRecommendView";
 import FeatureView from "./childrenComponents/FeatureView";
 
 import { getHomeMultidata, getHomeData } from "network/home";
-
+import {debounce} from 'common/utils';
 export default {
   name: "Home",
 
@@ -87,7 +56,11 @@ export default {
           list: []
         }
       },
-      currentType: "pop"
+      currentType: "pop",
+      probetype: 3,
+      needTop:false,
+      tabOffetTop:0,
+      istabfixed:false
     };
   },
   components: {
@@ -108,9 +81,17 @@ export default {
   created() {
     // 1.请求多个数据
     this.getHomeMultidata();
+    // 2.请求商品数据
     this.getHomeData("pop", 1);
     this.getHomeData("new", 1);
     this.getHomeData("sell", 1);
+  },
+  mounted() {
+    // 1.图片加载完的事件监听
+    const refresh = debounce(this.$refs.scroll.refresh,200)
+     this.$bus.$on('itemImageLoad',()=>{
+      refresh()
+    })
   },
   methods: {
     // 事件监听相关
@@ -128,10 +109,27 @@ export default {
         default:
           break;
       }
+      this.$refs.tabControl1.currentIndex = index
+      this.$refs.tabControl2.currentIndex = index
     },
     backtop() {
       this.$refs.scroll.scrollTo(0, 0);
     },
+    contentscroll(position) {
+      // 1.判断backtop是否显示
+      this.needTop = -(position.y)>1000
+      // 决定tab按钮是否吸顶
+      this.istabfixed = -(position.y)>this.tabOffetTop
+    },
+    loadMore(){
+      getHomeData(this.currentType)
+
+   
+   },
+   swiperload(){
+     this.tabOffetTop = this.$refs.tabControl2.$el.offsetTop
+     
+   },
     // 网络请求线管
     getHomeMultidata() {
       getHomeMultidata().then(res => {
@@ -142,10 +140,12 @@ export default {
     getHomeData(type) {
       const page = this.goods[type].page + 1;
       getHomeData(type, page).then(res => {
-
         this.goods[type].list.push(...res.data.list);
         this.goods[type].page += 1;
-      });
+
+        // 完成加载
+        this.$refs.scroll.finishPullUp()
+      })
     }
   }
 };
@@ -155,25 +155,26 @@ export default {
 #home {
   width: 100vw;
   height: 100vh;
-  padding-top: 44px;
 }
 .home-nav {
   background-color: var(--color-tint);
   color: #ffffff;
-  position: fixed;
-  top: 0;
+  z-index: 10;
+  position: relative;
+ /* position: fixed;
+   top: 0;
   left: 0;
   right: 0;
-  z-index: 999;
-}
-.tabcontrol {
-  position: sticky;
-  top: 44px;
-  background-color: #ffffff;
-  z-index: 999;
+  z-index: 999; */
 }
 .content {
-  height: calc(100vh - 95px);
-  overflow: hidden;
+  position: absolute;
+  top: 44px;
+  bottom: 49px;
+}
+.tabcontrol{
+  position: relative;
+  z-index: 99;
+  background-color: #ffffff;
 }
 </style>
