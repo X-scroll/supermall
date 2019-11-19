@@ -41,7 +41,5 @@ export default {
 </script>
 
 <style scoped>
-.tab{
-  /* width: 375px; */
-}
+
 </style>

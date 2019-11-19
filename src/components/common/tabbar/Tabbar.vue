@@ -18,7 +18,6 @@ export default {
   display: flex;
   background-color: #f6f6f6;
   position: fixed;
-  z-index: 9999999;
   left: 0;
   right: 0;
   bottom: 0;

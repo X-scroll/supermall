@@ -34,9 +34,9 @@ import FeatureView from "./childrenComponents/FeatureView";
 
 import { getHomeMultidata, getHomeData } from "network/home";
 import {debounce} from 'common/utils';
+import {itemListenerMixin} from "common/mixin"
 export default {
   name: "Home",
-
   data() {
     return {
       // result : null
@@ -60,9 +60,10 @@ export default {
       probetype: 3,
       needTop:false,
       tabOffetTop:0,
-      istabfixed:false
+      istabfixed:false,
     };
   },
+  mixins:[itemListenerMixin],
   components: {
     NavBar,
     TabControl,
@@ -78,6 +79,13 @@ export default {
       return this.goods[this.currentType].list;
     }
   },
+  activated() {
+  },
+  deactivated() {
+    
+    // 取消全局事件的监听
+    this.$bus.$off('itemImageLoad',this.itemImageListener)
+  },
   created() {
     // 1.请求多个数据
     this.getHomeMultidata();
@@ -87,11 +95,14 @@ export default {
     this.getHomeData("sell", 1);
   },
   mounted() {
-    // 1.图片加载完的事件监听
-    const refresh = debounce(this.$refs.scroll.refresh,200)
-     this.$bus.$on('itemImageLoad',()=>{
-      refresh()
-    })
+    // // 1.图片加载完的事件监听
+    // let refresh = debounce(this.$refs.scroll.refresh,200)
+    // // 对监听事件进行保存
+    // this.itemImageListener = ()=>{
+    //   refresh()
+    // }
+    //  this.$bus.$on('itemImageLoad',this.itemImageListener)
+    
   },
   methods: {
     // 事件监听相关
@@ -123,8 +134,6 @@ export default {
     },
     loadMore(){
       getHomeData(this.currentType)
-
-   
    },
    swiperload(){
      this.tabOffetTop = this.$refs.tabControl2.$el.offsetTop
