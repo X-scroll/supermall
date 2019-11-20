@@ -20,6 +20,9 @@
       ></DetailCommentInfo>
       <GoodsList ref="recommend" :goods="recommend"></GoodsList>
     </Scroll>
+
+    <BackTop @click.native="backtop" v-show="needTop"></BackTop>
+    <DetailBottomBar @addToCart="addCart"></DetailBottomBar>
   </div>
 </template>
 
@@ -31,6 +34,8 @@ import DetailShopInfo from "./childComponents/DetailShopInfo";
 import DetailGoodsInfo from "./childComponents/DetailGoodsInfo";
 import DetailParamInfo from "./childComponents/DetailParamInfo";
 import DetailCommentInfo from "./childComponents/DetailCommentInfo";
+import DetailBottomBar from "./childComponents/DetailBottomBar";
+
 import {
   getDetail,
   Goods,
@@ -41,7 +46,8 @@ import {
 import GoodsList from "components/content/goods/GoodsList";
 import Scroll from "components/common/scroll/Scroll";
 import { debounce } from "common/utils";
-import { itemListenerMixin } from "common/mixin";
+
+import { itemListenerMixin, backTopMixin } from "common/mixin";
 
 export default {
   name: "Detail",
@@ -54,9 +60,10 @@ export default {
     DetailGoodsInfo,
     DetailParamInfo,
     DetailCommentInfo,
-    GoodsList
+    GoodsList,
+    DetailBottomBar
   },
-  mixins: [itemListenerMixin],
+  mixins: [itemListenerMixin, backTopMixin],
   data() {
     return {
       iid: null,
@@ -114,6 +121,7 @@ export default {
         this.themeTopY.push(this.$refs.params.$el.offsetTop - 44);
         this.themeTopY.push(this.$refs.comment.$el.offsetTop - 44);
         this.themeTopY.push(this.$refs.recommend.$el.offsetTop - 44);
+        this.themeTopY.push(Number.MAX_VALUE);
       });
     });
   },
@@ -138,18 +146,43 @@ export default {
       let length = this.themeTopY.length;
 
       // positionY的值和组件中的值比较
+      // for (let i = 0; i < length; i++) {
+      //   if (
+      //     this.currentIndex != i &&
+      //     ((i < length - 1 &&
+      //       positionY >= this.themeTopY[i] &&
+      //       positionY < this.themeTopY[i + 1]) ||
+      //       (i == length - 1 && positionY >= this.themeTopY[i]))
+      //   ) {
+      //     this.currentIndex = i;
+      //     this.$refs.nav.currentIndex = this.currentIndex;
+      //   }
+      // }
+      // console.log(length);
       for (let i = 0; i < length; i++) {
         if (
           this.currentIndex != i &&
-          ((i < length - 1 &&
-            positionY >= this.themeTopY[i] &&
-            positionY < this.themeTopY[i + 1]) ||
-            (i == length - 1 && positionY >= this.themeTopY[i]))
+          positionY >= this.themeTopY[i] &&
+          positionY < this.themeTopY[i + 1]
         ) {
           this.currentIndex = i;
           this.$refs.nav.currentIndex = this.currentIndex;
         }
       }
+      // 混入方法的backTop
+      this.listenerNeedTop(position);
+    },
+    addCart() {
+      // 1.获取购物车需要展示的东西
+      const product = {};
+      // 图片，标题，描述，价格，*唯一标识
+      product.image = this.topImages[0];
+      product.title = this.goods.title;
+      product.desc = this.goods.desc;
+      product.price = this.goods.nowPrice;
+      product.iid = this.iid;
+      // console.log(product);
+        this.$store.dispatch('addToCart', product)
     }
   }
 };
@@ -162,6 +195,6 @@ export default {
   background-color: #fff;
 }
 .content {
-  height: calc(100vh - 44px);
+  height: calc(100vh - 100px);
 }
 </style>

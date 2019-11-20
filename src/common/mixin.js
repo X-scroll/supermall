@@ -16,3 +16,25 @@ export const itemListenerMixin = {
     // console.log("woshi mixin");
   }
 };
+
+import BackTop from "components/content/backTop/BackTop";
+import {ToTopValue} from "common/const"
+
+export const backTopMixin={
+  components:{
+    BackTop
+  },
+  data() {
+    return {
+      needTop:false
+    }
+  },
+  methods: {
+    backtop() {
+      this.$refs.scroll.scrollTo(0, 0);
+    },
+    listenerNeedTop(position){
+      this.needTop = -(position.y)>ToTopValue
+    }
+  },
+}

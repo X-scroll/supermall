@@ -26,7 +26,6 @@ import NavBar from "components/common/navbar/NavBar";
 import TabControl from "components/content/tabControl/TabControl";
 import GoodsList from "components/content/goods/GoodsList";
 import Scroll from "components/common/scroll/Scroll";
-import BackTop from "components/content/backTop/BackTop";
 
 import HomeSwiper from "./childrenComponents/HomeSwiper";
 import HomeRecommendView from "./childrenComponents/HomeRecommendView";
@@ -34,7 +33,7 @@ import FeatureView from "./childrenComponents/FeatureView";
 
 import { getHomeMultidata, getHomeData } from "network/home";
 import {debounce} from 'common/utils';
-import {itemListenerMixin} from "common/mixin"
+import {itemListenerMixin,backTopMixin} from "common/mixin";
 export default {
   name: "Home",
   data() {
@@ -58,19 +57,17 @@ export default {
       },
       currentType: "pop",
       probetype: 3,
-      needTop:false,
       tabOffetTop:0,
       istabfixed:false,
     };
   },
-  mixins:[itemListenerMixin],
+  mixins:[itemListenerMixin,backTopMixin],
   components: {
     NavBar,
     TabControl,
     GoodsList,
     HomeSwiper,
     Scroll,
-    BackTop,
     HomeRecommendView,
     FeatureView
   },
@@ -123,12 +120,9 @@ export default {
       this.$refs.tabControl1.currentIndex = index
       this.$refs.tabControl2.currentIndex = index
     },
-    backtop() {
-      this.$refs.scroll.scrollTo(0, 0);
-    },
     contentscroll(position) {
       // 1.判断backtop是否显示
-      this.needTop = -(position.y)>1000
+      this.listenerNeedTop(position)
       // 决定tab按钮是否吸顶
       this.istabfixed = -(position.y)>this.tabOffetTop
     },
